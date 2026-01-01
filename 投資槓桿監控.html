@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>財之初 | 槓桿風險監控自動計算表</title>
+    <style>
+        :root {
+            --primary-color: #1a365d;
+            --accent-color: #c53030;
+            --success-color: #2f855a;
+            --warning-color: #dd6b20;
+            --bg-color: #f7fafc;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: #2d3748;
+        }
+        .container {
+            max-width: 600px;
+            background: white;
+            margin: 0 auto;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        header {
+            text-align: center;
+            border-bottom: 2px solid var(--primary-color);
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+        }
+        header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 24px;
+        }
+        header p {
+            font-size: 14px;
+            color: #718096;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background: #edf2f7;
+            border-radius: 8px;
+        }
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .result-value {
+            font-weight: bold;
+        }
+        .risk-highlight {
+            text-align: center;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 18px;
+            transition: 0.3s;
+        }
+        .safe { background-color: #c6f6d5; color: #22543d; }
+        .warning { background-color: #feebc8; color: #744210; }
+        .danger { background-color: #fed7d7; color: #822727; }
+        
+        .cta {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 14px;
+        }
+        .cta a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>財之初 | 投資槓桿監控</h1>
+        <p>掌握風險，才是真正的獲利</p>
+    </header>
+
+    <div class="input-group">
+        <label>目前股價 (元)</label>
+        <input type="number" id="price" value="180" oninput="calculate()">
+    </div>
+    <div class="input-group">
+        <label>持有股數 (張)</label>
+        <input type="number" id="shares" value="10" oninput="calculate()">
+    </div>
+    <div class="input-group">
+        <label>總借貸金額 (元)</label>
+        <input type="number" id="loan" value="1000000" oninput="calculate()">
+    </div>
+    <div class="input-group">
+        <label>年利率 (%)</label>
+        <input type="number" id="rate" value="2.5" step="0.1" oninput="calculate()">
+    </div>
+
+    <div class="results">
+        <div class="result-item">
+            <span>總資產市值</span>
+            <span class="result-value" id="totalValue">0</span>
+        </div>
+        <div class="result-item">
+            <span>目前維持率</span>
+            <span class="result-value" id="ratio">0%</span>
+        </div>
+        <div class="result-item" style="color: var(--accent-color);">
+            <span>斷頭追繳價 (130%)</span>
+            <span class="result-value" id="callPrice">0</span>
+        </div>
+        <div class="result-item">
+            <span>安全跌幅</span>
+            <span class="result-value" id="safeDrop">0%</span>
+        </div>
+        <hr>
+        <div class="result-item">
+            <span>每月利息支出</span>
+            <span class="result-value" id="monthlyInterest">0</span>
+        </div>
+
+        <div id="riskStatus" class="risk-highlight">計算中...</div>
+    </div>
+
+    <div class="cta">
+        🔔 想學習更多精算理財？<br>
+        立即訂閱 <a href="https://www.youtube.com/@財之初" target="_blank">財之初 YouTube 頻道</a>
+    </div>
+</div>
+
+<script>
+    function calculate() {
+        const price = parseFloat(document.getElementById('price').value) || 0;
+        const shares = parseFloat(document.getElementById('shares').value) || 0;
+        const loan = parseFloat(document.getElementById('loan').value) || 0;
+        const rate = parseFloat(document.getElementById('rate').value) || 0;
+
+        const totalValue = price * shares * 1000;
+        const ratio = loan > 0 ? (totalValue / loan) * 100 : 0;
+        const callPrice = (loan * 1.3) / (shares * 1000);
+        const safeDrop = price > 0 ? ((price - callPrice) / price) * 100 : 0;
+        const monthlyInterest = (loan * (rate / 100)) / 12;
+
+        // 更新顯示
+        document.getElementById('totalValue').innerText = 'NT$ ' + totalValue.toLocaleString();
+        document.getElementById('ratio').innerText = ratio.toFixed(2) + '%';
+        document.getElementById('callPrice').innerText = 'NT$ ' + callPrice.toFixed(2);
+        document.getElementById('safeDrop').innerText = safeDrop.toFixed(2) + '%';
+        document.getElementById('monthlyInterest').innerText = 'NT$ ' + Math.round(monthlyInterest).toLocaleString();
+
+        // 風險狀態判斷
+        const statusDiv = document.getElementById('riskStatus');
+        if (ratio >= 160) {
+            statusDiv.innerText = "✅ 目前狀態：安全";
+            statusDiv.className = "risk-highlight safe";
+        } else if (ratio >= 140) {
+            statusDiv.innerText = "⚠️ 目前狀態：警示";
+            statusDiv.className = "risk-highlight warning";
+        } else {
+            statusDiv.innerText = "🚨 目前狀態：極度危險";
+            statusDiv.className = "risk-highlight danger";
+        }
+    }
+
+    // 初始化
+    calculate();
+</script>
+
+</body>
+</html>
